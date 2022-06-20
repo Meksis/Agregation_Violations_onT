@@ -231,12 +231,15 @@ class Example(QMainWindow):
 
     def jsonsave(self):
 
-        self.file,_ = QFileDialog.getOpenFileName(None, "Title", "", "JSON (*.json)")#выбираем файл json
-        if self.file:
-            self.handle = open(self.file, "r")  # открываем файл json
+        #global path_file
+        self.path_file,_ = QFileDialog.getOpenFileName(None, "Title", "", "GEOJSON (*.geojson)")#выбираем файл json
+        #self.file,_ = QFileDialog.getOpenFileName(None, "Title", "", "JSON (*.json)")#выбираем файл json
+        #self.s = ''
+        if self.path_file:
+            self.handle = open(self.path_file, "r")  # открываем файл json
             self.check_button = True
-            self.s += self.handle.read()
-            #print(self.s)
+            self.s = self.handle.read()
+            #print(self.s, '\n')
 
 
 class search_window(QWidget):
@@ -339,8 +342,8 @@ class search_window(QWidget):
         self.find_button.clicked.connect(self.find_button_reaction)
         
         self.area.setGeometry(QtCore.QRect(0, 300, 800, 400))
-        self.data_begin_input.setGeometry(QtCore.QRect(50, 250, 150, 30))
-        self.data_end_input.setGeometry(QtCore.QRect(600, 250, 150, 30))
+        self.data_begin_input.setGeometry(QtCore.QRect(50, 250, 160, 30))
+        self.data_end_input.setGeometry(QtCore.QRect(600, 250, 160, 30))
 
         self.date_begin_hint.setGeometry(QtCore.QRect(0, 200, 260, 30))
         self.date_end_hint.setGeometry(QtCore.QRect(540, 200, 260, 30))
@@ -743,18 +746,19 @@ class data_vizualize(QWidget):
         self.iframe = folium.IFrame(html=self.html, width=300, height=300)
         self.popup = folium.Popup(self.iframe, max_width=2650)
 
-        with open('walk.json', 'w') as outfile:
+        with open('founded_path.geojson', 'w') as outfile:
             json.dump(self.json_file, outfile)
 
         m = folium.Map(location=self.cordinates, zoom_start=17)
         folium.Marker(
             location=self.cordinates,
             popup=self.popup,
-            tooltip='Сlick me',
+            tooltip='Информация',
             icon=folium.Icon(color="green")).add_to(m)
-        walkData = os.path.join('walk.json')
 
-        folium.GeoJson(walkData, name='walk').add_to(m)
+        walkData = os.path.join('founded_path.geojson')
+
+        folium.GeoJson(walkData).add_to(m)
 
         data = io.BytesIO()
         m.save(data, close_file=False)
