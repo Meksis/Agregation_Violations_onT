@@ -807,4 +807,4 @@ application.show()
 search_win.show()
 data_input.show()
 
-sys.exit(app.exec())
+sys.exit(app.exec()) 
