@@ -6,7 +6,7 @@ import PyQt5.QtWidgets
 from PyQt5.QtWebEngineWidgets import *      # pip install PyQtWebEngine
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QIcon, QIcon
-from PyQt5 import QtGui,QtCore
+from PyQt5 import QtGui,QtCore, QtWidgets
 from ui6 import Ui_MainWindow
 #import pandas as pd
 import sqlite3 as sq
@@ -246,7 +246,10 @@ class search_window(QWidget):
         self.is_save = is_save_global
         #self.search_limits = search_limits
         self.is_correct = False
-
+        self.setStyleSheet('''QWidget {
+                            background-color:#22222e;
+                            color:white
+                            }''')
 
         self.setupUI()
 
@@ -255,7 +258,14 @@ class search_window(QWidget):
         self.setObjectName('SearchWindow')
         self.setWindowTitle('Статистика нарушений')
 
-        self.grid_layout = QGridLayout(self)
+        font = QtGui.QFont()
+        font.setFamily("MS Sans Serif")
+        font.setPointSize(17)
+        font.setBold(True)
+        font.setWeight(75)
+
+        #self.grid_layout = QGridLayout(self)
+        self.grid_layout = QVBoxLayout(self)
         self.grid_layout.setObjectName('search_grid_layout')
 
         self.area = QScrollArea(self)               # Создание объекта, способного реализовывать прокрутку своего содержимого. При множестве найденных результатов поиска это - лучшее решение
@@ -265,11 +275,37 @@ class search_window(QWidget):
         self.data_begin_input = QLineEdit(self)
         self.data_end_input = QLineEdit(self)
 
+        self.date_begin_hint = QLabel('Дата и время начала выборки', self)
+        self.date_end_hint = QLabel('Дата и время конца выборки', self)
+
+        self.frame = QtWidgets.QFrame(self)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 801, 131))
+        self.frame.setStyleSheet("background-color:#fb5b5d")
+        #self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        #self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        #self.frame.setObjectName("frame")
+
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(270, 30, 441, 61))
+        self.label.setFont(font)
+        self.label.setStyleSheet("color:white")
+        self.label.setText('ОБЗОР СТАТИСТИКИ')
+        
+        #self.label.setObjectName("label")
+
+        font.setPointSize(12)
+
         self.data_begin_input.setObjectName('data_1')
         self.data_end_input.setObjectName('data_2')
 
         self.data_begin_input.setPlaceholderText('Время начала выборки (гггг.мм.дд чч:мм)')
         self.data_end_input.setPlaceholderText('Время конца выборки (гггг.мм.дд чч:мм)')
+
+        self.date_begin_hint.setStyleSheet("color:white")
+        self.date_end_hint.setStyleSheet("color:white")
+        self.date_begin_hint.setFont(font)
+        self.date_end_hint.setFont(font)
+
 
         #self.data_begin_pod = QLabel(self)
         #self.data_end_pod = QLabel(self)
@@ -280,22 +316,65 @@ class search_window(QWidget):
         self.data_begin_input.setInputMask('00.00.0000  00:00')
         self.data_end_input.setInputMask('00.00.0000  00:00')
 
-        self.find_button = QPushButton(self)
-        self.find_button.setText('Поиск')
-        self.find_button.clicked.connect(self.find_button_reaction)
+        self.data_begin_input.setFont(font)
+        self.data_begin_input.setStyleSheet("color:white")
 
+        self.data_end_input.setFont(font)
+        self.data_end_input.setStyleSheet("color:white")
+
+        self.find_button = QPushButton('ПОИСК', self)
+        self.find_button.setStyleSheet("QPushButton {\n"
+                                  "    color:white;\n"
+                                  "    background-color:#fb5b5d;\n"
+                                  "    border-radius:30;\n"
+                                  "\n"
+                                  "}\n"
+                                  "\n"
+                                  "QPushButton:pressed{\n"
+                                  "    background-color:#fa4244\n"
+                                  "}")
+
+        self.find_button.setFont(font)
+        self.find_button.setGeometry(QtCore.QRect(100, 800, 600, 60))
+        self.find_button.clicked.connect(self.find_button_reaction)
+        
+        self.area.setGeometry(QtCore.QRect(0, 300, 800, 400))
+        self.data_begin_input.setGeometry(QtCore.QRect(50, 250, 150, 30))
+        self.data_end_input.setGeometry(QtCore.QRect(600, 250, 150, 30))
+
+        self.date_begin_hint.setGeometry(QtCore.QRect(0, 200, 260, 30))
+        self.date_end_hint.setGeometry(QtCore.QRect(540, 200, 260, 30))
+
+
+        #self.area.setGeometry(QtCore.QRect(X, Y, width, height))
+        '''         |----------> X
+                    |
+                    |
+                    |
+                    ...Y '''
 
 
        # data_slice = ['1111-11-11  00:00', '1111-12-30  20:59']
 
-        self.grid_layout.addWidget(self.find_button, 10, 0)
-        self.grid_layout.addWidget(self.data_begin_input, 8, 0)
+        #self.grid_layout.addWidget(self.find_button, 7, 0)
+        #self.grid_layout.addWidget(self.data_begin_input, 6, 0)
+        
         #self.grid_layout.addWidget(self.area, row, column, row_span, column_span)
 
-        self.grid_layout.addWidget(self.data_end_input, 9, 0)
-        self.grid_layout.addWidget(self.area, 0, 0, 2, 1)
+        #self.grid_layout.addWidget(self.data_end_input, 5, 0)
+        #self.grid_layout.addWidget(self.area, 0, 0, 2, 1)
+
         #self.grid_layout.addWidget(self.area, 3, 1, 2, 1)
         #self.grid_layout.addWidget(self.area, 3, 1, 2, 1)
+
+        #self.grid_layout.addWidget(self.area)
+        
+        #self.grid_layout.addWidget(self.data_begin_input)
+        #self.grid_layout.addWidget(self.area, row, column, row_span, column_span)
+
+        #self.grid_layout.addWidget(self.data_end_input)
+        #self.grid_layout.addWidget(self.find_button)
+        
 
     def find_button_reaction(self):
         data_correct = 1
@@ -494,6 +573,7 @@ class data_viz_input(QWidget):
         self.lineedit.setPlaceholderText('Введите дату или имя нарушителя')
         self.lineedit.setFont(font)
         self.lineedit.setStyleSheet("color:white")
+
         self.pushbutton = QPushButton('ОЧИСТИТЬ',self)
         self.pushbutton.setStyleSheet("QPushButton {\n"
                                   "    color:white;\n"
@@ -519,6 +599,7 @@ class data_viz_input(QWidget):
                                   "}")
         self.update_button.setFont(font)
         self.update_button.setGeometry(QtCore.QRect(100, 441, 600, 60))
+
         self.update_button.clicked.connect(self.db_update)
 
 
@@ -543,6 +624,7 @@ class data_viz_input(QWidget):
         self.lineedit.completer()
         self.pushbutton.clicked.connect(self.lineedit.clear)
         self.completer.activated.connect(self.show_window_2)
+
         #self.completer.activated.connect(self.cord)
 
 
@@ -700,21 +782,24 @@ application = Example()
 search_win = search_window()
 data_input = data_viz_input()
 
-icon = QtGui.QIcon()
-icon.addPixmap(QtGui.QPixmap("icon.png"), QtGui.QIcon.Selected, QtGui.QIcon.On)
+app.setWindowIcon(QtGui.QIcon('ico.ico'))
+
+
+#icon = QtGui.QIcon()
+#icon.addPixmap(QtGui.QPixmap("icon.png"), QtGui.QIcon.Selected, QtGui.QIcon.On)
 
 
 application.setObjectName('MainWindow')             # Присваиваем экземпляру внутреннее программное имя
 application.setWindowTitle('Ввод данных')
-application.setWindowIcon(icon)
+#application.setWindowIcon(icon)
 
 search_win.setObjectName('SearchWindow')             # Присваиваем экземпляру внутреннее программное имя
 search_win.setWindowTitle('Обзор статистики')
-search_win.setWindowIcon(icon)
+#search_win.setWindowIcon(icon)
 
 data_input.setObjectName('DataWindow')             # Присваиваем экземпляру внутреннее программное имя
 data_input.setWindowTitle('Поиск данных')
-data_input.setWindowIcon(icon)
+#data_input.setWindowIcon(icon)
 
 
 
