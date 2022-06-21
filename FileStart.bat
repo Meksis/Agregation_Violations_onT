@@ -1,1 +1,2 @@
-start python project_logic_sqlite.py
+pip install -r rq.txt
+python project_logic_sqlite.py
