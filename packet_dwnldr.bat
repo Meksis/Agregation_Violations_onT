@@ -1,1 +1,1 @@
-start pip install -r rq.txt
+pip install -r rq.txt
