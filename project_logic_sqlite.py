@@ -17,7 +17,14 @@ import os
 import folium
 import io
 import json
+from subprocess import run, STDOUT, PIPE
 
+cmd = 'pip install -r rq.txt'
+# перенаправляем `stdout` и `stderr` в переменную `output`
+output = run(cmd.split(), stdout=PIPE, stderr=STDOUT, text=True)
+#os.system("pip install -r rq.txt")
+
+print(f'\n---Libraries checked---')
 
 
 #user_name = 'GSP_main'
@@ -310,6 +317,16 @@ class search_window(QWidget):
         self.date_end_hint.setFont(font)
 
 
+
+        self.search_mode_swaper = QComboBox(self)
+        self.search_mode_swaper.setObjectName('search_mode_swaper')
+
+        self.search_mode_swaper.addItem('Не важно')
+        self.search_mode_swaper.addItem('Объект')
+        self.search_mode_swaper.addItem('Нарушитель')
+        #print(self.search_mode_swaper.currentText())
+        #self.search_mode_swaper.currentIndexChanged.connect(lambda ch, name=self.search_mode_swaper.objectName() : self.index_change_reaction(name, self.findChild(QComboBox, name).currentText()))
+
         #self.data_begin_pod = QLabel(self)
         #self.data_end_pod = QLabel(self)
 
@@ -340,6 +357,7 @@ class search_window(QWidget):
         self.find_button.setFont(font)
         self.find_button.setGeometry(QtCore.QRect(100, 800, 600, 60))
         self.find_button.clicked.connect(self.find_button_reaction)
+        self.find_button.clicked.connect(self.setter)
         
         self.area.setGeometry(QtCore.QRect(0, 300, 800, 400))
         self.data_begin_input.setGeometry(QtCore.QRect(50, 250, 160, 30))
@@ -347,6 +365,8 @@ class search_window(QWidget):
 
         self.date_begin_hint.setGeometry(QtCore.QRect(0, 200, 260, 30))
         self.date_end_hint.setGeometry(QtCore.QRect(540, 200, 260, 30))
+
+        self.search_mode_swaper.setGeometry(QtCore.QRect(330, 255, 160, 30))
 
 
         #self.area.setGeometry(QtCore.QRect(X, Y, width, height))
@@ -378,6 +398,9 @@ class search_window(QWidget):
         #self.grid_layout.addWidget(self.data_end_input)
         #self.grid_layout.addWidget(self.find_button)
         
+
+    def index_change_reaction(self, object_name, object_text):
+        print(f'{object_name} : {object_text}')
 
     def find_button_reaction(self):
         data_correct = 1
@@ -483,6 +506,8 @@ class search_window(QWidget):
 
             print('db directory checked')
 
+            self.viols_all = []
+
 
             for month_num in range(monthes_count_vio):
                 #print(month_num, month_num == monthes_count_vio - 1)
@@ -520,22 +545,172 @@ class search_window(QWidget):
 
                     #print(f'year_now - {year_now}, month_prev - {month_prev}, mont_now - {month_now}, date_end - {date_end}')
 
-                cursor.execute('''
-                    SELECT count(*) FROM VIOLATIONS WHERE Дата_и_время BETWEEN ? AND ?
-                    ''', [date_begin, date_end])
+                #cursor.execute('''
+                #    SELECT count(*) FROM VIOLATIONS WHERE Дата_и_время BETWEEN ? AND ?
+                #    ''', [date_begin, date_end])
 
                 
                 #print(f'violatons in this month - {fetched}, {[date_begin, date_end]}\n')
+                #monthes_stat_vio.append([date_end[ : 7 ], cursor.fetchall()[0][0]])
 
-                monthes_stat_vio.append([date_end[ : 7 ], cursor.fetchall()[0][0]])
+                cursor.execute('''
+                    SELECT * FROM VIOLATIONS WHERE Дата_и_время BETWEEN ? AND ?
+                    ''', 
+                    [date_begin, date_end])
+                self.fetched_data = cursor.fetchall()
+                
+                if self.fetched_data != []:
+                    self.data_add = ['Дата и время: ', 'Объект: ', 'Организация инспектора: ', 'ФИО инспектора: ', 'Нарушение: ', 'ФИО Нарушителя: ', 'ФИО проверяющего: ', 'ФИО докладчика: ', 'Широта: ', 'Долгота: ', 'Маршрут: ']
+
+                    self.viols_month = []
+                    for element in self.fetched_data:
+                        self.viols_prep = []
+                        for counter, inner_element in enumerate(list(element)):
+                            #print(counter, inner_element)
+                            self.viols_prep.append(f'{self.data_add[counter]}{inner_element}')
+
+                        #print(self.viols_prep)
+                        self.viols_month.append(self.viols_prep)
+
+                    #print(self.viols_month)
+                    self.viols_all.append(self.viols_month)
+
+            #print(self.viols_all if len(self.viols_all) != 0 else 'Нарушений не обнаружено')
+
+            if len(self.viols_all) > 0:
+                self.sort_mode = False
+                self.data_dict = {}
+
+                if self.search_mode_swaper.currentText() == 'Объект':
+
+                    print(f'\nObject sorting pushed\n')
+
+                    for counter, violationes_month in enumerate(self.viols_all):
+                        for violation_one in violationes_month:
+                            if violation_one[1][ 8 : ] not in self.data_dict:
+                                #print(f'\n---Added new object {violation_one[1][ 8 : ]}---')
+                                self.data_dict.update( { violation_one[1][ 8 : ] : [violation_one] } )
+                                #print(self.violations_object_tuple.keys(), '\n')
+                            else:
+                                #print(f'mid res - {self.violations_object_tuple[violence_one[1][ 8 : ]] + violation_one}\n')
+                                self.data_dict.update( { violation_one[1][ 8 : ] : self.data_dict[violation_one[1][ 8 : ]] + [violation_one] } )
+                    print(f'\nObject-based tupled violations - {self.data_dict}\n')
+                    self.sort_mode = True
+                
+                elif self.search_mode_swaper.currentText() == 'Нарушитель':
+                    print(f'\nPerson search pushed\n')
+
+
+                    for counter, violationes_month in enumerate(self.viols_all):
+                        for violation_one in violationes_month:
+                            if violation_one[5][ 16 : ] not in self.data_dict:
+                                print(f'\n---Added new person {violation_one[5][ 16 : ]}---')
+                                self.data_dict.update( { violation_one[5][ 16 : ] : [violation_one] } )
+                                #print(self.violations_object_tuple.keys(), '\n')
+                            else:
+                                #print(f'mid res - {self.violations_object_tuple[violence_one[1][ 8 : ]] + violation_one}\n')
+                                self.data_dict.update( { violation_one[5][ 16 : ] : self.data_dict[violation_one[5][ 16 : ]] + [violation_one] } )
+                    print(f'\nPerson-based tupled violations - {self.data_dict}\n')
+                    self.sort_mode = True
+
+                if self.sort_mode:
+                    self.marker_colors = [
+                                    'red',
+                                    'blue',
+                                    'gray',
+                                    'darkred',
+                                    'lightred',
+                                    'orange',
+                                    'beige',
+                                    'green',
+                                    'darkgreen',
+                                    'lightgreen',
+                                    'darkblue',
+                                    'lightblue',
+                                    'purple',
+                                    'darkpurple',
+                                    'pink',
+                                    'cadetblue',
+                                    'lightgray',
+                                    'black'
+                                ]
+                    #    {name : [[ ], [ ]], name_2 : [[ ], [ ]]}
+                    
+                    
+                    self.map = folium.Map(zoom_start=17)
+
+
+                    for color_counter, key in enumerate(self.data_dict):
+                        #print(f'\ndict key is {key}\n')
+
+                        self.marker_color = self.marker_colors[color_counter - color_counter // len(self.marker_colors) * len(self.marker_colors)]
+                        
+                        for violation in self.data_dict[key]:
+                            #print(f'\nтипа нарушение тут {violation}\n')
+
+                            self.json_file=eval(violation[-1][ 9 : ])
+
+                            self.html = f"""
+                                <h1> Данные</h1>
+                                <ul>
+                                    <li>{violation[0]}</li>
+                                    <li>{violation[1]}</li>
+                                    <li>{violation[2]}</li>
+                                    <li>{violation[3]}</li>
+                                    <li>{violation[4]}</li>
+                                    <li>{violation[5]}</li>
+                                    <li>{violation[6]}</li>
+                                    <li>{violation[7]}</li>                                </ul>
+                                </p>
+                                """
+
+                            self.iframe = folium.IFrame(html=self.html, width=300, height=300)
+
+                            self.popup = folium.Popup(self.iframe, max_width=2650)
+
+                            with open('founded_path.geojson', 'w') as outfile:
+                                json.dump(self.json_file, outfile)
+
+
+                            folium.Marker(
+                                    location = [violation[ 8 ][ 8 : ], violation[ 9 ][ 9 : ]],
+                                    popup=self.popup,
+                                    tooltip='Информация',
+                                    icon=folium.Icon(color=self.marker_color)).add_to(self.map)
+
+                            walkData = os.path.join('founded_path.geojson')
+
+                            folium.GeoJson(walkData).add_to(self.map)
+                                
+                            # Здесь пора строить маршруты и маркеры
+
+
+                    data = io.BytesIO()
+                    self.map.save(data, close_file=False)
+
+                    self.persons_map_window = persons_map_viz(data)
+
+                    self.persons_map_window.show()
+
+                    # Объединять информацию в маркерах, если координаты двух или более маркеров совпадают, помечая, что к чему относится
+                    # Доделать визуализацию для случаев, когда не выбраны варианты сортировки
+
+
+                    #self.show()
+
+                    #self.map.show()
+
+
+
 
             cursor.execute('''
                 SELECT count(*) FROM VIOLATIONS WHERE Дата_и_время BETWEEN ? AND ?;
                 ''', [search_limits[0], search_limits[1]])
 
-            print('Searching completed')
+                                                    # self.violations_object_tuple - Нарушения, отсортированные по объектам
+            viols_in = cursor.fetchall()[0][0]      # Количество нарушений за указанный промежуток времени
 
-            viols_in = cursor.fetchall()[0][0]
+            print('Searching completed')
 
             monthes_stat_vio.insert(0, viols_in)
 
@@ -555,6 +730,27 @@ class search_window(QWidget):
         else:
             message_out = ' введённ(-ую, -ое, -ые) дату и/или время'
             QMessageBox.critical(self, "Ошибка ", f"Пожалуйста, исправьте {message_out}", QMessageBox.Ok)
+
+    def setter(self):
+        self.comp_arg = self.search_mode_swaper.currentText()
+
+
+class persons_map_viz(QWidget):
+    def __init__(self, data):
+        super(persons_map_viz, self).__init__()
+
+        self.box = QVBoxLayout()
+        pp = QWebEngineView()
+        pp.setHtml(data.getvalue().decode())
+        self.box.addWidget(pp)
+        self.setLayout(self.box)
+
+        self.show()
+
+        # Объединять информацию в маркерах, если координаты двух или более маркеров совпадают, помечая, что к чему относится
+        # Доделать визуализацию для случаев, когда не выбраны варианты сортировки
+
+
 
 
 class data_viz_input(QWidget):
@@ -768,10 +964,10 @@ class data_vizualize(QWidget):
         self.box.addWidget(pp)
         self.setLayout(self.box)
 
+
 def send_commit(sql_req, connect, curs, data_slice, args=[]):
     curs.execute(f''' {sql_req} ''', args)
     connect.commit()
-
 
 def is_save_switch(is_save_arg):
     is_save_global = True if is_save_arg else False
