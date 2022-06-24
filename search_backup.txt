@@ -1,0 +1,215 @@
+for month_num in range(monthes_count_vio):
+                #print(month_num, month_num == monthes_count_vio - 1)
+                if month_num == 0:
+                    date_begin = '-'.join(date_slice_begin)  + '  ' + date_time_begin
+                    date_end = date_begin[ : 8 ] + '31' + '  23:59'
+                    # ['1111-11-11  00:00', '2000-12-31  23:59']
+
+                    #print(f'date_begin - {date_begin}\ndate_end - {date_end}\n')
+
+                elif month_num == monthes_count_vio - 1:
+                    date_begin = '-'.join('-'.join(date_slice_end).split('-')[ : 2]) + '-01'  + '  00:00'
+                    date_end = '-'.join(date_slice_end) + '  ' + date_time_end
+                    #print(f'date_begin - {date_begin}\ndate_end - {date_end}\nEND\n')
+
+                else:
+                    #print(''.join(date_end[ 5 : 7 ]))
+                    month_prev = int(''.join(date_end[ 5 : 7 ]))
+                    
+
+                    if month_prev + 1 > 12:
+                        year_now = str(int(''.join(date_end[ : 4])) + 1)
+                        month_now = '01'
+                        
+                    else:
+                        year_now = str(date_end[ : 4])
+                        month_now = '0' + str(int(month_prev) + 1) if len(str(int(month_prev) + 1)) < 2 else str(int(month_prev) + 1)
+
+                    date_begin = year_now + '-' + month_now + '-' + '01' + '  00:00'
+
+                    #0000-00-01  00:00
+
+                    date_end = date_begin[ : 8] + '31' + '  23:59'
+
+
+                    #print(f'year_now - {year_now}, month_prev - {month_prev}, mont_now - {month_now}, date_end - {date_end}')
+
+                #cursor.execute('''
+                #    SELECT count(*) FROM VIOLATIONS WHERE Дата_и_время BETWEEN ? AND ?
+                #    ''', [date_begin, date_end])
+
+                
+                #print(f'violatons in this month - {fetched}, {[date_begin, date_end]}\n')
+                #monthes_stat_vio.append([date_end[ : 7 ], cursor.fetchall()[0][0]])
+
+                cursor.execute('''
+                    SELECT * FROM VIOLATIONS WHERE Дата_и_время BETWEEN ? AND ?
+                    ''', 
+                    [date_begin, date_end])
+                self.fetched_data = cursor.fetchall()
+                
+                if self.fetched_data != []:
+                    self.data_add = ['Дата и время: ', 'Объект: ', 'Организация инспектора: ', 'ФИО инспектора: ', 'Нарушение: ', 'ФИО Нарушителя: ', 'ФИО проверяющего: ', 'ФИО докладчика: ', 'Широта: ', 'Долгота: ', 'Маршрут: ']
+
+                    self.viols_month = []
+                    for element in self.fetched_data:
+                        self.viols_prep = []
+                        for counter, inner_element in enumerate(list(element)):
+                            #print(counter, inner_element)
+                            self.viols_prep.append(f'{self.data_add[counter]}{inner_element}')
+
+                        #print(self.viols_prep)
+                        self.viols_month.append(self.viols_prep)
+
+                    #print(self.viols_month)
+                    self.viols_all.append(self.viols_month)
+
+
+
+
+
+
+
+
+
+
+
+
+for compire in self.html_united:
+                        self.attr_find = compire[4 + compire.index(' ') - compire.index(self.search_mode) + 3  : -7]
+
+                        for marker_key in self.markers:
+                            #print(f'all markers - {self.markers[marker_key]}')
+                            for marker_info in self.markers[marker_key]:
+                                if marker_info.count(' ') == 0:
+                                    continue
+
+                                for splitter in marker_info.split('<ul>'):
+                                    if splitter != '''
+                                ''':
+                                        if self.attr_find in splitter:
+                                            #print(f'''attr_find {self.attr_find}, compire - {compire}, splitter - '{splitter}', '{marker_key}' ''')
+
+                                            if self.attr_find not in self.draw_points:
+                                                self.add_header = compire + '<ul>' + splitter
+                                                #print(self.add_header)
+                                                #self.add_header.insert(0, compire)
+                                                self.draw_points.update({ self.attr_find : [marker_key, self.add_header] })
+
+                                            else:
+                                                #print(self.draw_points.keys(), self.attr_find)
+                                                self.draw_points.update({ self.attr_find : [marker_key, self.draw_points[self.attr_find][1] + '<ul>' + splitter] })
+
+
+                                #marker_info = marker_info[0]
+
+                                #print(self.attr_find, self.attr_find in marker_info, marker_info)
+
+                                if self.attr_find in marker_info[0]:
+                                    if self.attr_find not in self.draw_points:
+                                        self.add_header = marker_info[0]
+                                        self.add_header.insert(0, compire)
+
+                                        self.draw_points.update({ self.attr_find : [marker_key, self.add_header] })
+                                    else:
+                                        self.draw_points.update({ self.attr_find : [marker_key, self.draw_points[marker_key][1] + marker_info[0]] })
+
+
+self.marker_colors[color_counter - color_counter // len(self.marker_colors) * len(self.marker_colors)]
+
+
+
+
+
+
+for color_counter, final_data in enumerate(self.draw_points):
+
+                        print(final_data)
+
+                        #print(final_data[0 : color_counter] + final_data[ color_counter+1 :])
+
+                        #print(x[0 : counter] + x[ counter + 1 :])
+                               
+                        #print('\n', self.draw_points[final_data], self.marker_colors[color_counter - color_counter // len(self.marker_colors) * len(self.marker_colors)], '\n')
+
+                        self.iframe = folium.IFrame(html=self.draw_points[final_data][1], width=300, height=300)
+                        self.popup = folium.Popup(self.iframe, max_width=2650)
+
+                        self.cords = []
+
+                        for number in self.draw_points[final_data][0].split(', '):
+                            self.cords.append(float(number))
+
+
+                        if self.cords in final_data[0 : color_counter] + final_data[ color_counter + 1 : ]:
+
+
+
+                            folium.Marker(
+                                        location= self.cords, 
+                                        icon=folium.Icon(color = self.marker_colors[color_counter - color_counter // len(self.marker_colors) * len(self.marker_colors)]), 
+                                        popup=self.popup
+                                    ).add_to(self.map)
+
+
+
+
+self.html_united = []
+                    for attribute in self.data_dict:
+                        self.html_united.append(str(f'''<h4>{self.search_mode} - {attribute}</h4>\n\n'''))
+                        self.local_marker_united_color = 'black'
+                        #print(self.html_united)
+
+                    '''for marker_info in self.markers[marker_key]:
+                        if attribute in marker_info[0]:
+                            self.iframe = folium.IFrame(html=self.html_united, width=300, height=300)
+                            self.popup = folium.Popup(self.iframe, max_width=2650)
+
+                            folium.Marker(
+                                    location=marker_key.split(', '), 
+                                    icon=folium.Icon(color = self.local_marker_united_color), 
+                                    popup=self.popup
+
+
+
+                            ).add_to(self.map)
+
+
+
+
+                       # print(f'middle html - {self.html_united}\n')
+'''
+                    self.draw_points = {}
+
+
+
+elif self.search_mode_swaper.currentText() == 'Нарушитель':
+                    print(f'\nPerson search pushed\n')
+
+
+                    for counter, violation_one in enumerate(self.viols_all):
+                        if violation_one[5][ 16 : ] not in self.data_dict:
+                            print(f'\n---Added new person {violation_one[5][ 16 : ]}---')
+                            #print(f'''added - {[f'id: {self.viol_counter}'] + violation_one}''')
+                            self.data_dict.update( { violation_one[5][ 16 : ] : [[f'id: {self.viol_counter}'] + violation_one] } )
+                            #print(self.violations_object_tuple.keys(), '\n')
+                        else:
+                            #print(f'mid res - {self.violations_object_tuple[violence_one[1][ 8 : ]] + violation_one}\n')
+                            self.data_dict.update( { violation_one[5][ 16 : ] : self.data_dict[violation_one[5][ 16 : ]] + [[f'id: {self.viol_counter}'] + violation_one] } )
+                            #print(f'\nPerson-based tupled violations - {self.data_dict}\n')
+                        self.viol_counter += 1
+                    self.sort_mode = 'Нарушитель'
+
+
+if self.search_mode == 'Нарушитель':
+                        self.names = {}
+                            for mark_key in self.markers:
+                            self.names.update({ mark_key : 1 })
+                        print(self.names)
+
+
+55.74402945561097
+37.61914014816284
+
+55.78530644041365
+37.60370671749114

@@ -18,11 +18,11 @@ import folium
 import io
 import json
 #from subprocess import run, STDOUT, PIPE
-'''import subprocess
+import subprocess
 
 cmd = 'pip install -r rq.txt'
 output = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
-print(f'\n---Libraries checked---')'''
+print(f'\n---Libraries checked---')
 
 
 #user_name = 'GSP_main'
@@ -276,20 +276,15 @@ class search_window(QWidget):
         self.grid_layout = QVBoxLayout(self)
         self.grid_layout.setObjectName('search_grid_layout')
 
-        #self.area = QScrollArea(self)               # Создание объекта, способного реализовывать прокрутку своего содержимого. При множестве найденных результатов поиска это - лучшее решение
+        self.area = QScrollArea(self)               # Создание объекта, способного реализовывать прокрутку своего содержимого. При множестве найденных результатов поиска это - лучшее решение
         #self.area.setFont(font)                     # Форматируем объект. В данном случае - только меняем размер шрифта
-        #self.area.setWidgetResizable(True)          # Говорим проге, что содержимое можно прокручивать
-
-        
-
+        self.area.setWidgetResizable(True)          # Говорим проге, что содержимое можно прокручивать
 
         self.data_begin_input = QLineEdit(self)
         self.data_end_input = QLineEdit(self)
 
         self.date_begin_hint = QLabel('Дата и время начала выборки', self)
         self.date_end_hint = QLabel('Дата и время конца выборки', self)
-        self.area = QLabel('Здесь будет отображено количество нарушений за указанный период', self)
-        self.filter_hint = QLabel('Фильтрация по:', self)
 
         self.frame = QtWidgets.QFrame(self)
         self.frame.setGeometry(QtCore.QRect(0, 0, 801, 131))
@@ -318,8 +313,6 @@ class search_window(QWidget):
         self.date_end_hint.setStyleSheet("color:white")
         self.date_begin_hint.setFont(font)
         self.date_end_hint.setFont(font)
-        self.area.setFont(font)
-        self.filter_hint.setFont(font)
 
 
 
@@ -331,7 +324,7 @@ class search_window(QWidget):
 
         self.search_mode_swaper.addItem('Не важно')
         
-        #self.search_mode_swaper.addItem('Нарушитель')
+        self.search_mode_swaper.addItem('Нарушитель')
         #print(self.search_mode_swaper.currentText())
         #self.search_mode_swaper.currentIndexChanged.connect(lambda ch, name=self.search_mode_swaper.objectName() : self.index_change_reaction(name, self.findChild(QComboBox, name).currentText()))
 
@@ -373,12 +366,11 @@ class search_window(QWidget):
 
         self.date_begin_hint.setGeometry(QtCore.QRect(0, 200, 260, 30))
         self.date_end_hint.setGeometry(QtCore.QRect(540, 200, 260, 30))
-        self.filter_hint.setGeometry(QtCore.QRect(340, 200, 150, 30))
 
         self.search_mode_swaper.setGeometry(QtCore.QRect(330, 255, 160, 30))
 
-        #self.data_begin_input.setText('01.01.2020 00:00')
-        #self.data_end_input.setText('31.12.2023 23:59')
+        self.data_begin_input.setText('01.01.2020 00:00')
+        self.data_end_input.setText('31.12.2023 23:59')
 
 
         #self.area.setGeometry(QtCore.QRect(X, Y, width, height))
@@ -500,7 +492,7 @@ class search_window(QWidget):
             date_slice_end = search_limits[1][ : 10].split('-')
             date_time_end = ''.join(search_limits[1][ -6 : ])
 
-            #print(search_limits)
+            print(search_limits)
 
             #print(f'slices here:\nbegin_slice - {date_slice_begin}\nend_slice - {date_slice_end}')
 
@@ -543,7 +535,7 @@ class search_window(QWidget):
 
 
 
-            #print(self.viols_all, len(self.viols_all))
+            print(self.viols_all, len(self.viols_all))
 
             #print(self.viols_all if len(self.viols_all) != 0 else 'Нарушений не обнаружено')
 
@@ -553,29 +545,41 @@ class search_window(QWidget):
                 self.viol_counter = 0
                 self.search_mode = self.search_mode_swaper.currentText()
 
-                self.map = folium.Map(zoom_start=17)
-
                 if self.search_mode_swaper.currentText() == 'Объект':
 
                     print(f'\nObject sorting pushed\n')
 
-                    for counter, violation_one in enumerate(self.viols_all):
-                        #print(violation_one,'\n')
-                        if violation_one[1][ 8 : ] not in self.data_dict:
-                            #print(f'\n---Added new object {violation_one[1][ 8 : ]}---')
-                            self.data_dict.update( { violation_one[1][ 8 : ] : [[f'id: {self.viol_counter}'] + violation_one] } )
-                            
-                        else:
-                            #print(f'mid res - {self.violations_object_tuple[violence_one[1][ 8 : ]] + violation_one}\n')
-                            self.data_dict.update( { violation_one[1][ 8 : ] : self.data_dict[violation_one[1][ 8 : ]] + [[f'id: {self.viol_counter}'] + violation_one] } )
-                            #print(f'\nObject-based tupled violations - {self.data_dict}\n')
-                        self.viol_counter += 1
-                    self.sort_mode = 'Объект'
-                    
-                    #print(self.data_dict)
+                    for counter, violationes_month in enumerate(self.viols_all):
+                        print(violationes_month,'\n')
+                        for violation_one in violationes_month:
+                            if violation_one[1][ 8 : ] not in self.data_dict:
+                                #print(f'\n---Added new object {violation_one[1][ 8 : ]}---')
+                                self.data_dict.update( { violation_one[1][ 8 : ] : [[f'id: {self.viol_counter}'] + violation_one] } )
+                                #print(self.violations_object_tuple.keys(), '\n')
+                            else:
+                                #print(f'mid res - {self.violations_object_tuple[violence_one[1][ 8 : ]] + violation_one}\n')
+                                self.data_dict.update( { violation_one[1][ 8 : ] : self.data_dict[violation_one[1][ 8 : ]] + [[f'id: {self.viol_counter}'] + violation_one] } )
+                                #print(f'\nObject-based tupled violations - {self.data_dict}\n')
+                            self.viol_counter += 1
+                    self.sort_mode = True
                 
+                elif self.search_mode_swaper.currentText() == 'Нарушитель':
+                    print(f'\nPerson search pushed\n')
 
-                
+
+                    for counter, violationes_month in enumerate(self.viols_all):
+                        for violation_one in violationes_month:
+                            if violation_one[5][ 16 : ] not in self.data_dict:
+                                print(f'\n---Added new person {violation_one[5][ 16 : ]}---')
+                                #print(f'''added - {[f'id: {self.viol_counter}'] + violation_one}''')
+                                self.data_dict.update( { violation_one[5][ 16 : ] : [[f'id: {self.viol_counter}'] + violation_one] } )
+                                #print(self.violations_object_tuple.keys(), '\n')
+                            else:
+                                #print(f'mid res - {self.violations_object_tuple[violence_one[1][ 8 : ]] + violation_one}\n')
+                                self.data_dict.update( { violation_one[5][ 16 : ] : self.data_dict[violation_one[5][ 16 : ]] + [[f'id: {self.viol_counter}'] + violation_one] } )
+                                #print(f'\nPerson-based tupled violations - {self.data_dict}\n')
+                        self.viol_counter += 1
+                    self.sort_mode = True
 
                 if self.sort_mode:
                     self.marker_colors = [
@@ -601,6 +605,7 @@ class search_window(QWidget):
                     #    {name : [[ ], [ ]], name_2 : [[ ], [ ]]}
                     
                     
+                    self.map = folium.Map(zoom_start=17)
                     self.markers = {}
 
                     #print(self.data_dict)
@@ -608,9 +613,10 @@ class search_window(QWidget):
                         #print(f'\ndict key is {key}\n')
 
                         self.marker_color = self.marker_colors[color_counter - color_counter // len(self.marker_colors) * len(self.marker_colors)]
-
+                       # print(f'marker color - {self.marker_color}')
                         for violation in self.data_dict[key]:
-                            #print(violation[0], violation[1], violation[2])
+                            #print(f'\nтипа нарушение тут {violation}\n')
+                            #print(f'Violation - {[violation[1], violation[2]]}')
                             
 
                             self.json_file=eval(violation[-1][ 9 : ])
@@ -625,61 +631,130 @@ class search_window(QWidget):
                                     <li>{violation[6]}</li>
                                     <li>{violation[7]}</li>
                                     <li>{violation[8]}</li>
-                                    -----------------------
                                 </ul>
                                 """
-                            #print(self.html, '\n\n')
+
+                            
 
                             with open('founded_path.geojson', 'w') as outfile:
                                 json.dump(self.json_file, outfile)
 
 
-                            # СДЕЛАТЬ БУФЕРНЫЙ СЛОВАРЬ ДЛЯ ИЗБЕЖАНИЯ НАЛОЖЕНИЯ МАРШРУТОВ ДРУГ НА ДРУГА
-
-
+                            #print(f'\nviolation checked - {violation}\n')
                             self.marker_cords = f'{violation[ 9 ][ 8 : ]}, {violation[ 10 ][ 9 : ]}'
+                            #print(f'marker cords - {self.marker_cords}, {[violation[1], violation[2]]}')
+                            #self.markers.append(self.marker_cords)
 
                             if self.marker_cords not in self.markers:
-                                self.markers.update({ self.marker_cords : [self.html, self.marker_color, key] })
-                                #print(f'added new note - {self.marker_cords, [self.html, self.marker_color, key]}')
+                                self.markers.update({ self.marker_cords : [self.html, self.marker_color] })
                                 
                             else:
                                 #self.markers.update({ self.marker_cords : self.markers[self.marker_cords] + [self.html, self.marker_color] })
 
-                                self.markers.update({ self.marker_cords : [self.markers[self.marker_cords][0] + '\n\n' + self.html, self.markers[self.marker_cords][1], key]})
-                                #print('dict updated and now it is -', self.marker_cords, [self.markers[self.marker_cords][0] + '\n\n' + self.html, self.markers[self.marker_cords][1], key])
+                                self.markers.update({ self.marker_cords : [self.markers[self.marker_cords][0] + '\n\n' + self.html, self.marker_color ]})
 
                             walkData = os.path.join('founded_path.geojson')
 
                             folium.GeoJson(walkData).add_to(self.map)
 
 
-                    
-                
+                    self.html_united = []
+                    for attribute in self.data_dict:
+                        self.html_united.append(str(f'''<h4>{self.search_mode} - {attribute}</h4>\n\n'''))
+                        self.local_marker_united_color = 'black'
+                        #print(self.html_united)
 
-                    for mark_key in self.markers:
-                        #print(f'Key now = {mark_key}, {self.markers[mark_key][2]}\n\n')
-                        #print(self.markers[mark_key], '\n')
+                    '''for marker_info in self.markers[marker_key]:
+                        if attribute in marker_info[0]:
+                            self.iframe = folium.IFrame(html=self.html_united, width=300, height=300)
+                            self.popup = folium.Popup(self.iframe, max_width=2650)
 
-                        self.html_input = f'''<h3>{self.search_mode} - {self.markers[mark_key][2]}</h3>\n\n{self.markers[mark_key][0]}'''
-                        self.iframe = folium.IFrame(html= self.html_input, width=300, height=300)
-                        self.popup = folium.Popup(self.iframe, max_width=2650)
-                        folium.Marker(
-                                        location = mark_key.split(', '), 
-                                        icon=folium.Icon(color = self.markers[mark_key][1]), 
-                                        popup=self.popup
-                                    ).add_to(self.map)
+                            folium.Marker(
+                                    location=marker_key.split(', '), 
+                                    icon=folium.Icon(color = self.local_marker_united_color), 
+                                    popup=self.popup
 
+
+
+                            ).add_to(self.map)
+
+
+
+
+                       # print(f'middle html - {self.html_united}\n')
+'''
+                    self.draw_points = {}
+                    for compire in self.html_united:
+                        self.attr_find = compire[4 + compire.index(' ') - compire.index(self.search_mode) + 3  : -7]
+
+                        for marker_key in self.markers:
+                            #print(f'all markers - {self.markers[marker_key]}')
+                            for marker_info in self.markers[marker_key]:
+                                if marker_info.count(' ') == 0:
+                                    continue
+
+                                for splitter in marker_info.split('<ul>'):
+                                    if splitter != '''
+                                ''':
+                                        if self.attr_find in splitter:
+                                            #print(f'''attr_find {self.attr_find}, compire - {compire}, splitter - '{splitter}', '{marker_key}' ''')
+
+                                            if self.attr_find not in self.draw_points:
+                                                self.add_header = compire + '<ul>' + splitter
+                                                #print(self.add_header)
+                                                #self.add_header.insert(0, compire)
+                                                self.draw_points.update({ self.attr_find : [marker_key, self.add_header] })
+
+                                            else:
+                                                #print(self.draw_points.keys(), self.attr_find)
+                                                self.draw_points.update({ self.attr_find : [marker_key, self.draw_points[self.attr_find][1] + '<ul>' + splitter] })
+
+
+                                #marker_info = marker_info[0]
+
+                                #print(self.attr_find, self.attr_find in marker_info, marker_info)
+
+                                if self.attr_find in marker_info[0]:
+                                    if self.attr_find not in self.draw_points:
+                                        self.add_header = marker_info[0]
+                                        self.add_header.insert(0, compire)
+
+                                        self.draw_points.update({ self.attr_find : [marker_key, self.add_header] })
+                                    else:
+                                        self.draw_points.update({ self.attr_find : [marker_key, self.draw_points[marker_key][1] + marker_info[0]] })
 
                         
-                        #for mark_data in self.markers[marker_key]:
-                        #print(self.markers[mark_key], '\n')
-                    #print(self.markers)
-
 
                     print('Markers placed') 
 
-                    
+                    for color_counter, final_data in enumerate(self.draw_points):
+
+                        print(final_data)
+
+                        #print(final_data[0 : color_counter] + final_data[ color_counter+1 :])
+
+                        #print(x[0 : counter] + x[ counter + 1 :])
+                               
+                        #print('\n', self.draw_points[final_data], self.marker_colors[color_counter - color_counter // len(self.marker_colors) * len(self.marker_colors)], '\n')
+
+                        self.iframe = folium.IFrame(html=self.draw_points[final_data][1], width=300, height=300)
+                        self.popup = folium.Popup(self.iframe, max_width=2650)
+
+                        self.cords = []
+
+                        for number in self.draw_points[final_data][0].split(', '):
+                            self.cords.append(float(number))
+
+
+                        if self.cords in final_data[0 : color_counter] + final_data[ color_counter + 1 : ]:
+
+
+
+                            folium.Marker(
+                                        location= self.cords, 
+                                        icon=folium.Icon(color = self.marker_colors[color_counter - color_counter // len(self.marker_colors) * len(self.marker_colors)]), 
+                                        popup=self.popup
+                                    ).add_to(self.map)
   
 
                     data = ''
@@ -699,99 +774,6 @@ class search_window(QWidget):
                     #self.map.show()
 
 
-                else:
-                    self.markers = {}
-
-                    for data in self.viols_all:
-                        self.marker_cords = f'''{data[8].split(': ')[1]}, {data[9].split(': ')[1]}'''
-                        #print(data, '\n\n', self.marker_cords, '\n')
-                        
-                        self.html = f"""
-                                <ul>
-                                    <li>{data[0]}</li>
-                                    <li>{data[1]}</li>
-                                    <li>{data[2]}</li>
-                                    <li>{data[3]}</li>
-                                    <li>{data[4]}</li>
-                                    <li>{data[5]}</li>
-                                    <li>{data[6]}</li>
-                                    <li>{data[7]}</li>
-                                    -----------------------
-                                </ul>
-                                """
-
-                        if self.marker_cords not in self.markers:
-                            self.markers.update({ self.marker_cords : [self.html, data[-1]]})
-                        else:
-                            json_pathes = self.markers[self.marker_cords][1]
-                            if data[-1] not in json_pathes:
-                                json_pathes.append(data[-1])
-
-                            self.markers.update({ self.marker_cords : [self.markers[self.marker_cords][0] + '\n\n' + self.html, json_pathes] })
-
-
-                    self.marker_colors = [
-                                    'red',
-                                    'blue',
-                                    'gray',
-                                    'darkred',
-                                    'lightred',
-                                    'orange',
-                                    'beige',
-                                    'green',
-                                    'darkgreen',
-                                    'lightgreen',
-                                    'darkblue',
-                                    'lightblue',
-                                    'purple',
-                                    'darkpurple',
-                                    'pink',
-                                    'cadetblue',
-                                    'lightgray',
-                                    'black'
-                                ]
-                    
-
-                    for color_counter, marker_key in enumerate(self.markers):
-                        self.marker_color = self.marker_colors[color_counter - color_counter // len(self.marker_colors) * len(self.marker_colors)]
-
-                        self.iframe = folium.IFrame(html = self.markers[marker_key][0], width=300, height=300)
-                        self.popup = folium.Popup(self.iframe, max_width=2650)
-                        #print('\nmarker_data - ',(self.markers[marker_key][-1].split(': ')[1] ))
-                        #print(f'all data - {self.markers[marker_key]}\n\n-------')
-                        for marker_data in self.markers[marker_key]:
-
-                            #print('marker data -', self.markers[marker_key][-1][9 :] )
-
-                            path = eval(self.markers[marker_key][-1][9 :] )
-                            with open('founded_path.geojson', 'w') as outfile:
-                                json.dump(path, outfile)
-                                #print('file dumped\n')
-
-                            walkData = os.path.join('founded_path.geojson')
-                            #print(f'WalkData - {walkData}, {outfile}, path - {path}\n')
-
-                            folium.GeoJson(walkData).add_to(self.map)
-
-        
-
-                        
-
-                        
-
-
-                        folium.Marker(
-                                        location = marker_key.split(', '), 
-                                        icon=folium.Icon(color = self.marker_color), 
-                                        popup=self.popup
-                                    ).add_to(self.map)
-                            
-                        
-                    data = io.BytesIO()
-                    self.map.save(data, close_file=False)
-
-                    self.buffer_window = persons_map_viz(data)
-
 
 
             cursor.execute('''
@@ -807,14 +789,12 @@ class search_window(QWidget):
 
             text = f'Всего нарушений за выбранный промежуток - {monthes_stat_vio[0]}\n'
 
-            self.area.setText(text)
-
             for i in range(1, len(monthes_stat_vio)):
                 month_stat = monthes_stat_vio[i]
                 text += f'''{month_stat[0] + '  -  ' + str(month_stat[1])}{'          <===' if month_stat[1] > 0 else ''}\n'''
             
-            #self.scrollAreaWidgetContents = QLabel(f'Нарушения по месяцам заданной выборки:\n{text}')   # Изменяем текст прокручиваемого окна на найденные страны
-            #self.area.setWidget(self.scrollAreaWidgetContents)
+            self.scrollAreaWidgetContents = QLabel(f'Нарушения по месяцам заданной выборки:\n{text}')   # Изменяем текст прокручиваемого окна на найденные страны
+            self.area.setWidget(self.scrollAreaWidgetContents)
 
             connection.close()
 
@@ -831,7 +811,6 @@ class search_window(QWidget):
 class persons_map_viz(QWidget):
     def __init__(self, data):
         super(persons_map_viz, self).__init__()
-        self.setWindowTitle('Статистическая карта')
 
         self.box = QVBoxLayout()
         pp = QWebEngineView()
