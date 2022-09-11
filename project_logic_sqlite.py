@@ -1,22 +1,22 @@
-import sys
-#import openpyxl
-#from openpyxl import *
 from PyQt5.QtWidgets import *   # pip install pyqt5 , библиотека для создания интерфейса
 import PyQt5.QtWidgets
 from PyQt5.QtWebEngineWidgets import *      # pip install PyQtWebEngine
 from PyQt5.QtCore import *
-from PyQt5.QtGui import QIcon, QIcon
+from PyQt5.QtGui import QIcon
 from PyQt5 import QtGui,QtCore, QtWidgets
+
 from ui6 import Ui_MainWindow
-#import pandas as pd
+
 import sqlite3 as sq
-#import pymysql
-#from pymysql import *
-#from auth_info import *
 import os
 import folium
 import io
 import json
+import sys
+
+
+
+
 #from subprocess import run, STDOUT, PIPE
 '''import subprocess
 
@@ -80,20 +80,11 @@ class Example(QMainWindow):
 
         if len(data) < 17:
             data_correct = 0
+            self.is_save = False
             print('Insufficient length of data or time')
             QMessageBox.critical(self, "Ошибка ", f"Пожалуйста, введите дату и время в форматах dd.mm.yyyy и hh:mm:ss соответственно", QMessageBox.Ok)
 
-        if len(latitude) < 10 or len(longitude) < 10:
-            data_correct = 0
-            print('Incorrect length of coordinates')
-            QMessageBox.critical(self, "Ошибка ", f"Пожалуйста, введите полные координаты точки", QMessageBox.Ok)
-
-        if self.s == '':
-            data_correct = False
-            QMessageBox.critical(self, 'Ошибка', 'Пожалуйста, загрузите json-файл с указанными точками маршрута', QMessageBox.Ok)
-
-
-        if data_correct:
+        else:
             time = data[ -6 : ].split(':')              # Время необходимо указывать в формате hh:mm:ss
             date = data[  : -7 ].split('-')            # Дату необходимо указывать в формате dd.mm.yyyy
             date = str(date[2] + '-' + date[1] + '-' + date[0]).split('-')
@@ -163,9 +154,21 @@ class Example(QMainWindow):
                 self.mas_data.append(fiodoc)
                 self.mas_data.append(shirota)
                 self.mas_data.append(dolgota)
+       
 
-                #is_save_global = True if self.is_save else False
-                #print(f'\nis_save_global in text data - {is_save_global}\n')
+        if len(latitude) < 10 or len(longitude) < 10:
+            data_correct = 0
+            self.is_save = False
+            print('Incorrect length of coordinates')
+            QMessageBox.critical(self, "Ошибка ", f"Пожалуйста, введите полные координаты точки", QMessageBox.Ok)
+
+        
+
+
+        if self.s == '' and data_correct:
+            self.is_save = False
+            data_correct = 0
+            QMessageBox.critical(self, 'Ошибка', 'Пожалуйста, загрузите json-файл с указанными точками маршрута', QMessageBox.Ok)
 
     def data_uploading(self):
 
@@ -246,7 +249,6 @@ class Example(QMainWindow):
             self.s = self.handle.read()
             #print(self.s, '\n')
 
-
 class search_window(QWidget):
     def __init__(self):
         super(search_window, self).__init__()
@@ -274,7 +276,7 @@ class search_window(QWidget):
 
         #self.grid_layout = QGridLayout(self)
         self.grid_layout = QVBoxLayout(self)
-        self.grid_layout.setObjectName('search_grid_layout')
+        self.grid_layout.setObjectName('search_VBox_layout')
 
         #self.area = QScrollArea(self)               # Создание объекта, способного реализовывать прокрутку своего содержимого. При множестве найденных результатов поиска это - лучшее решение
         #self.area.setFont(font)                     # Форматируем объект. В данном случае - только меняем размер шрифта
@@ -293,6 +295,16 @@ class search_window(QWidget):
 
         self.frame = QtWidgets.QFrame(self)
         self.frame.setGeometry(QtCore.QRect(0, 0, 801, 131))
+
+
+        #self.area.setGeometry(QtCore.QRect(X, Y, width, height))
+        '''         |----------> X
+                    |
+                    |
+                    |
+                    ...Y '''
+
+
         self.frame.setStyleSheet("background-color:#fb5b5d")
         #self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         #self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -310,9 +322,6 @@ class search_window(QWidget):
 
         self.data_begin_input.setObjectName('data_1')
         self.data_end_input.setObjectName('data_2')
-
-        self.data_begin_input.setPlaceholderText('Время начала выборки (гггг.мм.дд чч:мм)')
-        self.data_end_input.setPlaceholderText('Время конца выборки (гггг.мм.дд чч:мм)')
 
         self.date_begin_hint.setStyleSheet("color:white")
         self.date_end_hint.setStyleSheet("color:white")
@@ -351,6 +360,7 @@ class search_window(QWidget):
         self.data_end_input.setStyleSheet("color:white")
 
         self.find_button = QPushButton('ПОИСК', self)
+
         self.find_button.setStyleSheet("QPushButton {\n"
                                   "    color:white;\n"
                                   "    background-color:#fb5b5d;\n"
@@ -364,9 +374,10 @@ class search_window(QWidget):
 
         self.find_button.setFont(font)
         self.find_button.setGeometry(QtCore.QRect(100, 800, 600, 60))
+
         self.find_button.clicked.connect(self.find_button_reaction)
         self.find_button.clicked.connect(self.setter)
-        
+
         self.area.setGeometry(QtCore.QRect(0, 300, 800, 400))
         self.data_begin_input.setGeometry(QtCore.QRect(50, 250, 160, 30))
         self.data_end_input.setGeometry(QtCore.QRect(600, 250, 160, 30))
@@ -775,11 +786,6 @@ class search_window(QWidget):
 
         
 
-                        
-
-                        
-
-
                         folium.Marker(
                                         location = marker_key.split(', '), 
                                         icon=folium.Icon(color = self.marker_color), 
@@ -827,7 +833,6 @@ class search_window(QWidget):
     def setter(self):
         self.comp_arg = self.search_mode_swaper.currentText()
 
-
 class persons_map_viz(QWidget):
     def __init__(self, data):
         super(persons_map_viz, self).__init__()
@@ -844,15 +849,25 @@ class persons_map_viz(QWidget):
         # Объединять информацию в маркерах, если координаты двух или более маркеров совпадают, помечая, что к чему относится
         # Доделать визуализацию для случаев, когда не выбраны варианты сортировки
 
-
-
-
 class data_viz_input(QWidget):
 
     def __init__(self):
-        super().__init__()
+
+        super(data_viz_input, self).__init__()
         self.setFixedSize(800, 691)
-        self.setGeometry(300,300,800, 691)
+        #self.setGeometry(300,300,800, 691)
+
+
+        #   .setGeometry(QtCore.QRect(330, 255, 160, 30))
+        #   .setGeometry(QtCore.QRect(X, Y, width, height))
+        
+        '''         |----------> X
+                    |
+                    |
+                    |
+                    ...Y '''
+
+
         #self.excel_data()
         
         font = QtGui.QFont()
@@ -919,10 +934,6 @@ class data_viz_input(QWidget):
         self.completer.activated.connect(self.show_window_2)
 
         #self.completer.activated.connect(self.cord)
-
-
-        
-        self.show()
 
     def bd_data(self):
         
@@ -997,11 +1008,14 @@ class data_vizualize(QWidget):
         cursor.execute('''SELECT * FROM VIOLATIONS WHERE Дата_и_время = ? and ФИО_нарушителя = ?''', [self.lineedit.text()[ : 17 ], self.lineedit.text()[ 19 : ]])
 
         self.date_all_prep = cursor.fetchall()[0]
+
         self.date_all = []
         self.cordinates = []
         self.json_downloaded = ''
 
+
         for counter, element in enumerate(self.date_all_prep):
+            print(element)
             if counter < len(self.date_all_prep) - 3:
                 self.date_all.append(element)
 
@@ -1011,13 +1025,9 @@ class data_vizualize(QWidget):
             else:
                 self.json_downloaded = element
 
-        #print(self.json_downloaded)
-        print(self.cordinates)
+        self.box = QVBoxLayout(self)
 
-
-        self.box = QVBoxLayout()
-
-
+        
         self.json_file=eval(self.json_downloaded)    #преобразует строку в json
 
         self.html = f"""
@@ -1058,6 +1068,9 @@ class data_vizualize(QWidget):
         self.box.addWidget(pp)
         self.setLayout(self.box)
 
+class new_window(QWidget):
+    pass
+
 
 def send_commit(sql_req, connect, curs, data_slice, args=[]):
     curs.execute(f''' {sql_req} ''', args)
@@ -1078,11 +1091,6 @@ data_input = data_viz_input()
 
 app.setWindowIcon(QtGui.QIcon('ico.ico'))
 
-
-#icon = QtGui.QIcon()
-#icon.addPixmap(QtGui.QPixmap("icon.png"), QtGui.QIcon.Selected, QtGui.QIcon.On)
-
-
 application.setObjectName('MainWindow')             # Присваиваем экземпляру внутреннее программное имя
 application.setWindowTitle('Ввод данных')
 #application.setWindowIcon(icon)
@@ -1094,8 +1102,6 @@ search_win.setWindowTitle('Обзор статистики')
 data_input.setObjectName('DataWindow')             # Присваиваем экземпляру внутреннее программное имя
 data_input.setWindowTitle('Поиск данных')
 #data_input.setWindowIcon(icon)
-
-
 
 application.show()
 search_win.show()
