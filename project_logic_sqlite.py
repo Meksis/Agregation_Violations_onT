@@ -1,22 +1,26 @@
+import sys
+#import openpyxl
+#from openpyxl import *
 from PyQt5.QtWidgets import *   # pip install pyqt5 , библиотека для создания интерфейса
 import PyQt5.QtWidgets
 from PyQt5.QtWebEngineWidgets import *      # pip install PyQtWebEngine
 from PyQt5.QtCore import *
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QIcon
 from PyQt5 import QtGui,QtCore, QtWidgets
-
 from ui6 import Ui_MainWindow
-
+#import pandas as pd
 import sqlite3 as sq
+#import pymysql
+#from pymysql import *
+#from auth_info import *
 import os
 import folium
 import io
 import json
-import sys
-
-
-
-
+import matplotlib
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
 #from subprocess import run, STDOUT, PIPE
 '''import subprocess
 
@@ -27,6 +31,10 @@ print(f'\n---Libraries checked---')'''
 
 #user_name = 'GSP_main'
 #user_data = auth_info[user_name]
+
+
+matplotlib.use('Qt5Agg')
+
 
 is_save_global = 0
 data_all, date_name = '', ''
@@ -80,11 +88,20 @@ class Example(QMainWindow):
 
         if len(data) < 17:
             data_correct = 0
-            self.is_save = False
             print('Insufficient length of data or time')
             QMessageBox.critical(self, "Ошибка ", f"Пожалуйста, введите дату и время в форматах dd.mm.yyyy и hh:mm:ss соответственно", QMessageBox.Ok)
 
-        else:
+        if len(latitude) < 10 or len(longitude) < 10:
+            data_correct = 0
+            print('Incorrect length of coordinates')
+            QMessageBox.critical(self, "Ошибка ", f"Пожалуйста, введите полные координаты точки", QMessageBox.Ok)
+
+        if self.s == '':
+            data_correct = False
+            QMessageBox.critical(self, 'Ошибка', 'Пожалуйста, загрузите json-файл с указанными точками маршрута', QMessageBox.Ok)
+
+
+        if data_correct:
             time = data[ -6 : ].split(':')              # Время необходимо указывать в формате hh:mm:ss
             date = data[  : -7 ].split('-')            # Дату необходимо указывать в формате dd.mm.yyyy
             date = str(date[2] + '-' + date[1] + '-' + date[0]).split('-')
@@ -154,21 +171,9 @@ class Example(QMainWindow):
                 self.mas_data.append(fiodoc)
                 self.mas_data.append(shirota)
                 self.mas_data.append(dolgota)
-       
 
-        if len(latitude) < 10 or len(longitude) < 10:
-            data_correct = 0
-            self.is_save = False
-            print('Incorrect length of coordinates')
-            QMessageBox.critical(self, "Ошибка ", f"Пожалуйста, введите полные координаты точки", QMessageBox.Ok)
-
-        
-
-
-        if self.s == '' and data_correct:
-            self.is_save = False
-            data_correct = 0
-            QMessageBox.critical(self, 'Ошибка', 'Пожалуйста, загрузите json-файл с указанными точками маршрута', QMessageBox.Ok)
+                #is_save_global = True if self.is_save else False
+                #print(f'\nis_save_global in text data - {is_save_global}\n')
 
     def data_uploading(self):
 
@@ -249,10 +254,52 @@ class Example(QMainWindow):
             self.s = self.handle.read()
             #print(self.s, '\n')
 
+
+'''class MplCanvas(FigureCanvasQTAgg):
+
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super(MplCanvas, self).__init__(fig)'''
+
+class Canvas(FigureCanvasQTAgg):
+    def __init__(self, parent):
+        fig, self.ax = plt.subplots(figsize=(5, 4), dpi=200)
+        super().__init__(fig)
+        self.setParent(parent)
+
+        connection = sq.connect('Violations/violations.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT substr(Дата_и_время,1,4), COUNT(Дата_и_время) FROM VIOLATIONS GROUP BY substr(Дата_и_время,1,4)")
+        data = cursor.fetchall()
+
+        print(data)
+
+        datelist = []
+        datecount = []
+
+        for i in range(len(data)):
+            print(data[i][0])
+            datelist.append(data[i][0])
+            datecount.append(data[i][1])
+        print(datelist)
+        print(datecount)
+
+        fig, ax = plt.subplots()
+
+        years = datelist
+        counts = datecount
+
+        ax.bar(years, counts)#, label=bar_labels, color='red')#bar_colors
+
+        ax.set_ylabel('Кол-во нарушений')
+        ax.set_xlabel('Год')
+        ax.set_title('Кол-во нарушений по годам')
+
 class search_window(QWidget):
     def __init__(self):
         super(search_window, self).__init__()
-        self.setFixedSize(800, 950)
+        self.setFixedSize(1000, 640)
         self.is_save = is_save_global
         #self.search_limits = search_limits
         self.is_correct = False
@@ -260,13 +307,11 @@ class search_window(QWidget):
                             background-color:#22222e;
                             color:white
                             }''')
-
         self.setupUI()
+        #self.area = 
 
     def setupUI(self):
 
-        self.setObjectName('SearchWindow')
-        self.setWindowTitle('Статистика нарушений')
 
         font = QtGui.QFont()
         font.setFamily("MS Sans Serif")
@@ -274,71 +319,85 @@ class search_window(QWidget):
         font.setBold(True)
         font.setWeight(75)
 
+
         #self.grid_layout = QGridLayout(self)
         self.grid_layout = QVBoxLayout(self)
-        self.grid_layout.setObjectName('search_VBox_layout')
+        self.grid_layout.setObjectName('search_grid_layout')
 
         #self.area = QScrollArea(self)               # Создание объекта, способного реализовывать прокрутку своего содержимого. При множестве найденных результатов поиска это - лучшее решение
         #self.area.setFont(font)                     # Форматируем объект. В данном случае - только меняем размер шрифта
         #self.area.setWidgetResizable(True)          # Говорим проге, что содержимое можно прокручивать
 
-        
-
+    
 
         self.data_begin_input = QLineEdit(self)
         self.data_end_input = QLineEdit(self)
 
         self.date_begin_hint = QLabel('Дата и время начала выборки', self)
         self.date_end_hint = QLabel('Дата и время конца выборки', self)
-        self.area = QLabel('Здесь будет отображено количество нарушений за указанный период', self)
-        self.filter_hint = QLabel('Фильтрация по:', self)
+        #self.area = QLabel('Здесь будет отображено количество нарушений за указанный период', self)
+        self.filter_hint = QLabel('Фильтрация', self)
+        self.graph_type = QLabel('Тип графика:', self)
+        self.graph_parameter = QLabel('Параметр построения:', self)
+
+        # !! верхний блок
 
         self.frame = QtWidgets.QFrame(self)
-        self.frame.setGeometry(QtCore.QRect(0, 0, 801, 131))
-
-
-        #self.area.setGeometry(QtCore.QRect(X, Y, width, height))
-        '''         |----------> X
-                    |
-                    |
-                    |
-                    ...Y '''
-
-
-        self.frame.setStyleSheet("background-color:#fb5b5d")
+        self.frame.setGeometry(QtCore.QRect(0, 0, 100, 100))
+        self.frame.setStyleSheet("background-color:#22222e")
         #self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         #self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         #self.frame.setObjectName("frame")
 
-        self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(270, 30, 441, 61))
+        self.label = QtWidgets.QLabel(self)
+        self.label.setGeometry(QtCore.QRect(42, 15, 441, 61))
         self.label.setFont(font)
-        self.label.setStyleSheet("color:white")
         self.label.setText('ОБЗОР СТАТИСТИКИ')
-        
-        #self.label.setObjectName("label")
+        self.label.setStyleSheet("color:white")
+        self.label.setStyleSheet("background-color: #22222e")
+
+        #self.graphs_label = QtWidgets.QLabel(self)
+        self.graphs_label = Canvas(self)
+        self.graphs_label.setGeometry(QtCore.QRect(350, 20, 640, 540))
+        self.graphs_label.setFont(font)
+        self.label.setObjectName("label")
 
         font.setPointSize(12)
 
         self.data_begin_input.setObjectName('data_1')
         self.data_end_input.setObjectName('data_2')
 
+        self.data_begin_input.setPlaceholderText('Время начала выборки (гггг.мм.дд чч:мм)')
+        self.data_end_input.setPlaceholderText('Время конца выборки (гггг.мм.дд чч:мм)')
+
         self.date_begin_hint.setStyleSheet("color:white")
         self.date_end_hint.setStyleSheet("color:white")
         self.date_begin_hint.setFont(font)
         self.date_end_hint.setFont(font)
-        self.area.setFont(font)
+        #self.area.setFont(font)
         self.filter_hint.setFont(font)
+        self.graph_type.setFont(font)
+        self.graph_parameter.setFont(font)
 
 
 
         self.search_mode_swaper = QComboBox(self)
         self.search_mode_swaper.setObjectName('search_mode_swaper')
-
-
         self.search_mode_swaper.addItem('Объект')
-
         self.search_mode_swaper.addItem('Не важно')
+
+        self.graph_type_swaper = QComboBox(self)
+        self.graph_type_swaper.setObjectName('graph_type_swaper')
+        self.graph_type_swaper.addItem('Линейный')
+        self.graph_type_swaper.addItem('Столбчатая диаграмма')
+        self.graph_type_swaper.addItem('Круговая диаграмма')
+
+        self.graph_parameter_swaper = QComboBox(self)
+        self.graph_parameter_swaper.setObjectName('graph_parameter_swaper')
+        self.graph_parameter_swaper.addItem('По дате')
+        self.graph_parameter_swaper.addItem('По компаниям')
+        self.graph_parameter_swaper.addItem('По нарушителям')
+
         
         #self.search_mode_swaper.addItem('Нарушитель')
         #print(self.search_mode_swaper.currentText())
@@ -360,11 +419,10 @@ class search_window(QWidget):
         self.data_end_input.setStyleSheet("color:white")
 
         self.find_button = QPushButton('ПОИСК', self)
-
         self.find_button.setStyleSheet("QPushButton {\n"
                                   "    color:white;\n"
                                   "    background-color:#fb5b5d;\n"
-                                  "    border-radius:30;\n"
+                                  "    border-radius:15;\n"
                                   "\n"
                                   "}\n"
                                   "\n"
@@ -372,21 +430,63 @@ class search_window(QWidget):
                                   "    background-color:#fa4244\n"
                                   "}")
 
-        self.find_button.setFont(font)
-        self.find_button.setGeometry(QtCore.QRect(100, 800, 600, 60))
+        self.saving_button = QPushButton('СОХРАНИТЬ В ФАЙЛ', self)
+        self.saving_button.setStyleSheet("QPushButton {\n"
+                                  "    color:white;\n"
+                                  "    background-color:#fb5b5d;\n"
+                                  "    border-radius:15;\n"
+                                  "\n"
+                                  "}\n"
+                                  "\n"
+                                  "QPushButton:pressed{\n"
+                                  "    background-color:#fa4244\n"
+                                  "}")
 
-        self.find_button.clicked.connect(self.find_button_reaction)
+        self.map_open_button = QPushButton('ПОКАЗАТЬ НА КАРТЕ', self)
+        self.map_open_button.setStyleSheet("QPushButton {\n"
+                                  "    color:white;\n"
+                                  "    background-color:#fb5b5d;\n"
+                                  "    border-radius:15;\n"
+                                  "\n"
+                                  "}\n"
+                                  "\n"
+                                  "QPushButton:pressed{\n"
+                                  "    background-color:#fa4244\n"
+                                  "}")
+
+        # !! Расположение виджетов
+
+        self.find_button.setFont(font)
+        self.find_button.setGeometry(QtCore.QRect(25, 425, 300, 50))
+        self.find_button.clicked.connect(self.find_button_action)
         self.find_button.clicked.connect(self.setter)
 
-        self.area.setGeometry(QtCore.QRect(0, 300, 800, 400))
-        self.data_begin_input.setGeometry(QtCore.QRect(50, 250, 160, 30))
-        self.data_end_input.setGeometry(QtCore.QRect(600, 250, 160, 30))
+        self.saving_button.setFont(font)
+        self.saving_button.setGeometry(QtCore.QRect(25, 485, 300, 50))
+        self.saving_button.clicked.connect(self.saving_button_reaction)
+        #self.saving_button.clicked.connect(self.setter)
 
-        self.date_begin_hint.setGeometry(QtCore.QRect(0, 200, 260, 30))
-        self.date_end_hint.setGeometry(QtCore.QRect(540, 200, 260, 30))
-        self.filter_hint.setGeometry(QtCore.QRect(340, 200, 150, 30))
+        self.map_open_button.setFont(font)
+        self.map_open_button.setGeometry(QtCore.QRect(25, 545, 300, 50))
+        self.map_open_button.clicked.connect(self.find_button_reaction) #self.map_open_button.clicked.connect(self.map_open_button_reaction)
+        #self.saving_button.clicked.connect(self.setter)
+        
+        #self.area.setGeometry(QtCore.QRect(0, 300, 800, 400))
+        self.data_begin_input.setGeometry(QtCore.QRect(90, 160, 160, 30))
+        self.data_end_input.setGeometry(QtCore.QRect(90, 250, 160, 30))
 
-        self.search_mode_swaper.setGeometry(QtCore.QRect(330, 255, 160, 30))
+        self.date_begin_hint.setGeometry(QtCore.QRect(50, 120, 260, 30))
+        self.date_end_hint.setGeometry(QtCore.QRect(50, 210, 260, 30))
+        self.filter_hint.setGeometry(QtCore.QRect(115, 290, 150, 30))
+
+        self.graph_type.setGeometry(QtCore.QRect(360, 570, 150, 30))
+        self.graph_type_swaper.setGeometry(QtCore.QRect(480, 572, 150, 26))
+
+        self.graph_parameter.setGeometry(QtCore.QRect(635, 570, 260, 30))
+        self.graph_parameter_swaper.setGeometry(QtCore.QRect(835, 572, 150, 26))
+
+        self.search_mode_swaper.setGeometry(QtCore.QRect(90, 330, 160, 30))
+
 
         #self.data_begin_input.setText('01.01.2020 00:00')
         #self.data_end_input.setText('31.12.2023 23:59')
@@ -424,6 +524,25 @@ class search_window(QWidget):
 
     def index_change_reaction(self, object_name, object_text):
         print(f'{object_name} : {object_text}')
+
+    '''
+        Тест функции кнопки поиска. Строку №418:
+
+        self.find_button.clicked.connect(self.find_button_reaction)
+
+        Переделал в:
+        self.find_button.clicked.connect(self.find_button_reaction)
+
+    '''
+
+    def find_button_action(self):
+        print('Обработка кнопки поиска')
+
+    def saving_button_reaction(self):
+        print('Обработка кнопки сохранения')
+
+    def map_open_button_reaction(self):
+        print('Обработчик кнопки карты')
 
     def find_button_reaction(self):
         data_correct = 1
@@ -534,7 +653,6 @@ class search_window(QWidget):
             
 
             
-            
             self.viols_all = []
 
             cursor.execute(''' 
@@ -551,7 +669,6 @@ class search_window(QWidget):
                     self.add_prep.append(self.data_add[element_counter] + str(data_element))
                 
                 self.viols_all.append(self.add_prep)
-
 
 
             #print(self.viols_all, len(self.viols_all))
@@ -786,6 +903,11 @@ class search_window(QWidget):
 
         
 
+                        
+
+                        
+
+
                         folium.Marker(
                                         location = marker_key.split(', '), 
                                         icon=folium.Icon(color = self.marker_color), 
@@ -813,7 +935,7 @@ class search_window(QWidget):
 
             text = f'Всего нарушений за выбранный промежуток - {monthes_stat_vio[0]}\n'
 
-            self.area.setText(text)
+            #self.area.setText(text)
 
             for i in range(1, len(monthes_stat_vio)):
                 month_stat = monthes_stat_vio[i]
@@ -833,6 +955,7 @@ class search_window(QWidget):
     def setter(self):
         self.comp_arg = self.search_mode_swaper.currentText()
 
+
 class persons_map_viz(QWidget):
     def __init__(self, data):
         super(persons_map_viz, self).__init__()
@@ -849,25 +972,15 @@ class persons_map_viz(QWidget):
         # Объединять информацию в маркерах, если координаты двух или более маркеров совпадают, помечая, что к чему относится
         # Доделать визуализацию для случаев, когда не выбраны варианты сортировки
 
+
+
+
 class data_viz_input(QWidget):
 
     def __init__(self):
-
-        super(data_viz_input, self).__init__()
+        super().__init__()
         self.setFixedSize(800, 691)
-        #self.setGeometry(300,300,800, 691)
-
-
-        #   .setGeometry(QtCore.QRect(330, 255, 160, 30))
-        #   .setGeometry(QtCore.QRect(X, Y, width, height))
-        
-        '''         |----------> X
-                    |
-                    |
-                    |
-                    ...Y '''
-
-
+        self.setGeometry(300,300,800, 691)
         #self.excel_data()
         
         font = QtGui.QFont()
@@ -934,6 +1047,10 @@ class data_viz_input(QWidget):
         self.completer.activated.connect(self.show_window_2)
 
         #self.completer.activated.connect(self.cord)
+
+
+        
+        self.show()
 
     def bd_data(self):
         
@@ -1008,14 +1125,11 @@ class data_vizualize(QWidget):
         cursor.execute('''SELECT * FROM VIOLATIONS WHERE Дата_и_время = ? and ФИО_нарушителя = ?''', [self.lineedit.text()[ : 17 ], self.lineedit.text()[ 19 : ]])
 
         self.date_all_prep = cursor.fetchall()[0]
-
         self.date_all = []
         self.cordinates = []
         self.json_downloaded = ''
 
-
         for counter, element in enumerate(self.date_all_prep):
-            print(element)
             if counter < len(self.date_all_prep) - 3:
                 self.date_all.append(element)
 
@@ -1025,9 +1139,13 @@ class data_vizualize(QWidget):
             else:
                 self.json_downloaded = element
 
-        self.box = QVBoxLayout(self)
+        #print(self.json_downloaded)
+        print(self.cordinates)
 
-        
+
+        self.box = QVBoxLayout()
+
+
         self.json_file=eval(self.json_downloaded)    #преобразует строку в json
 
         self.html = f"""
@@ -1068,9 +1186,6 @@ class data_vizualize(QWidget):
         self.box.addWidget(pp)
         self.setLayout(self.box)
 
-class new_window(QWidget):
-    pass
-
 
 def send_commit(sql_req, connect, curs, data_slice, args=[]):
     curs.execute(f''' {sql_req} ''', args)
@@ -1091,6 +1206,11 @@ data_input = data_viz_input()
 
 app.setWindowIcon(QtGui.QIcon('ico.ico'))
 
+
+#icon = QtGui.QIcon()
+#icon.addPixmap(QtGui.QPixmap("icon.png"), QtGui.QIcon.Selected, QtGui.QIcon.On)
+
+
 application.setObjectName('MainWindow')             # Присваиваем экземпляру внутреннее программное имя
 application.setWindowTitle('Ввод данных')
 #application.setWindowIcon(icon)
@@ -1102,6 +1222,8 @@ search_win.setWindowTitle('Обзор статистики')
 data_input.setObjectName('DataWindow')             # Присваиваем экземпляру внутреннее программное имя
 data_input.setWindowTitle('Поиск данных')
 #data_input.setWindowIcon(icon)
+
+
 
 application.show()
 search_win.show()

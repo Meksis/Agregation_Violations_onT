@@ -1,0 +1,26 @@
+
+*.pyc
+План на сегодня, проект.txt
+founded_path.geojson
+founded_path.geojson
+*.unused
+Preview App/ico.ico
+Preview App/project_logic_sqlite.exe
+Preview App/RUT/walk.geojson
+Preview App/Violations/violations.db
+Preview App/Tretyakovka/walk.geojson
+Preview App/Краткое руководство.txt
+interface.py
+*.rar
+*.pptx
+*.dll
+Preview App/ВУЗ/Программы/SQLiteStudio/SQLiteStudio.exe
+Preview App/ВУЗ/Программы/SQLiteStudio/qt.conf
+Preview App/ВУЗ/Программы/python-3.7.2-amd64.exe
+Violations/PAA зкум.xlsx
+Preview App/ВУЗ/Файлы/Violations/violations.db
+Preview App/ВУЗ/Файлы/Tretyakovka/walk.geojson
+Preview App/ВУЗ/Файлы/RUT/walk.geojson
+Preview App/ВУЗ/Файлы/project_logic_sqlite.exe
+Preview App/ВУЗ/Файлы/ico.ico
+Preview App/ВУЗ/Программы/SQLiteStudio/sqlitestudiocli.exe
